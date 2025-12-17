@@ -8,6 +8,11 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 import os
 
+from models import db, User, Task  # ou tous tes modèles
+
+
+
+
 app = Flask(__name__)
 # Using SQLite locally to mirror your MSSQL structure for rapid prototyping
 # Database Configuration - 'data' folder
@@ -20,6 +25,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.secret_key = 'Ameno123' # Added for session security
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key") #pour le prod
+#cde: cf5b2a725f4501b10f264fde3ff684de1cfe1d0b57726b133f3323c29f9b2935
+
 
 
 # --- Mail Configuration REMOVED ---
@@ -32,9 +39,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
+# --- INITIALISATION DE LA BASE ---
+db.init_app(app)  # d'abord init
+with app.app_context():
+    db.create_all()  # ensuite créer toutes les tables
 
-
-db.init_app(app)
+# --- routes etc. ---
 
 def admin_required(f):
     @wraps(f)
