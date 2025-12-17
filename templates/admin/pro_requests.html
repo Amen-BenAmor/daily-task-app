@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .admin-pro-container {
+        max-width: 1600px;
+        margin: 1.5rem auto;
+        padding: 1rem;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .requests-table {
+        background: rgba(24, 24, 32, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        overflow-x: auto;
+    }
+
+    .requests-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+
+    .requests-table th {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+        padding: 0.6rem 0.5rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+    }
+
+    .requests-table td {
+        padding: 0.6rem 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        color: #cbd5e1;
+        white-space: nowrap;
+    }
+
+    .requests-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-pending {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .status-verification {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .status-approved {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-action {
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.7rem;
+        margin: 0.1rem;
+        white-space: nowrap;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-reject {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-view {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-view:hover {
+        background: rgba(139, 92, 246, 0.3);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: #181820;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow: auto;
+    }
+
+    .modal-content img {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="admin-pro-container">
+    <div class="admin-header">
+        <h2 class="admin-title">🔐 PRO Requests Management</h2>
+    </div>
+
+    <div class="requests-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Duration</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Proof</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td><strong>#{{ req.id }}</strong></td>
+                    <td>{{ req.user.email }}</td>
+                    <td>{{ req.duration_years }} year{{ 's' if req.duration_years > 1 else '' }}</td>
+                    <td>{{ req.payment_method|upper }}</td>
+                    <td>
+                        {% if req.status == 'EN_ATTENTE_PAIEMENT' %}
+                        <span class="status-badge status-pending">Pending</span>
+                        {% elif req.status == 'PAIEMENT_EN_VERIFICATION' %}
+                        <span class="status-badge status-verification">Verification</span>
+                        {% elif req.status == 'APPROUVEE' %}
+                        <span class="status-badge status-approved">Approved</span>
+                        {% elif req.status == 'REFUSEE' %}
+                        <span class="status-badge status-rejected">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ req.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        {% if req.proof_filename %}
+                        <button class="btn-action btn-view" onclick="viewProof('{{ req.proof_filename }}')">👁️
+                            View</button>
+                        {% else %}
+                        <span style="color: #64748b;">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if req.status == 'PAIEMENT_EN_VERIFICATION' %}
+                        <form method="POST" action="{{ url_for('approve_pro_request', request_id=req.id) }}"
+                            style="display: inline;" onsubmit="return confirm('Approve this PRO request?');">
+                            <button type="submit" class="btn-action btn-approve">✓ Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_pro_request', request_id=req.id) }}"
+                            style="display: inline;" onsubmit="return confirm('Reject this request?');">
+                            <button type="submit" class="btn-action btn-reject">✗ Reject</button>
+                        </form>
+                        {% elif req.status == 'APPROUVEE' %}
+                        <span style="color: #10b981; font-size: 0.7rem;">✓ Approved {{
+                            req.validated_at.strftime('%d/%m/%y') }}</span>
+                        {% elif req.status == 'REFUSEE' %}
+                        <span style="color: #ef4444; font-size: 0.7rem;">✗ Rejected {{
+                            req.validated_at.strftime('%d/%m/%y') }}</span>
+                        {% else %}
+                        <span style="color: #94a3b8; font-size: 0.7rem;">Awaiting payment</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for viewing proof -->
+<div class="modal" id="proofModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color: white; margin-bottom: 1rem;">Payment Proof</h3>
+        <img id="proofImage" src="" alt="Payment Proof">
+        <button onclick="closeModal()"
+            style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+    </div>
+</div>
+
+<script>
+    function viewProof(filename) {
+        const modal = document.getElementById('proofModal');
+        const img = document.getElementById('proofImage');
+        img.src = '/uploads/payment_proofs/' + filename;
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('proofModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0;">History Archive</h2>
+    </div>
+
+    <!-- Filters -->
+    <form action="{{ url_for('history') }}" method="GET"
+        style="display: flex; gap: 1rem; margin-bottom: 2rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; flex-wrap: wrap;">
+        <select name="category_filter" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.name }}" {{ 'selected' if request.args.get('category_filter')==cat.name else '' }}>{{
+                cat.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date_start" value="{{ request.args.get('date_start') }}" onchange="this.form.submit()"
+            placeholder="Start Date">
+        <input type="date" name="date_end" value="{{ request.args.get('date_end') }}" onchange="this.form.submit()"
+            placeholder="End Date">
+        <input type="text" name="task_search" value="{{ request.args.get('task_search', '') }}"
+            placeholder="Search Task..." class="form-input"
+            style="width: 150px; padding: 0.5rem; background: #23232b; border: 1px solid #444; color: white; border-radius: 4px;">
+
+        <select name="status_filter" onchange="this.form.submit()"
+            style="padding: 0.5rem; background: #23232b; border: 1px solid #444; color: white; border-radius: 4px;">
+            <option value="">All Status</option>
+            <option value="completed" {{ 'selected' if request.args.get('status_filter')=='completed' else '' }}>
+                Completed</option>
+            <option value="pending" {{ 'selected' if request.args.get('status_filter')=='pending' else '' }}>In Progress
+            </option>
+        </select>
+
+        <a href="{{ url_for('history') }}" class="btn-secondary"
+            style="text-decoration: none; padding: 0.5rem;">Clear</a>
+
+        <!-- Export Actions -->
+        <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('export_history_csv', **request.args) }}" class="btn-primary"
+                style="text-decoration: none; padding: 0.5rem; background: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path
+                        d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                </svg>
+                Export CSV
+            </a>
+        </div>
+    </form>
+
+    {% if entries %}
+    <div style="overflow-x: auto;">
+        <table class="big-table history-table">
+            <thead>
+                <tr>
+                    <th>Date Archived</th>
+                    <th>Category</th>
+                    <th>Task</th>
+                    <th>Imp</th>
+                    <th>Risk</th>
+                    <th>Tot</th>
+                    <th>Plan</th>
+                    <th>Finish</th>
+                    <th>%</th>
+                    <th>Min</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.date_of_the_day.strftime('%d/%m/%Y') if entry.date_of_the_day else '-' }}</td>
+                    <td>{{ entry.category_name }}</td>
+                    <td>{{ entry.task_name }}</td>
+                    <td>{{ entry.impact_score }}</td>
+                    <td>{{ entry.risk_score }}</td>
+                    <td>
+                        <span
+                            class="{{ 'score-crit' if entry.total_score >= 15 else 'score-high' if entry.total_score >= 10 else 'score-med' if entry.total_score >= 5 else 'score-low' }}">
+                            {{ entry.total_score }}
+                        </span>
+                    </td>
+                    <td>{{ entry.planified_date }}</td>
+                    <td>{{ entry.finish_date or '-' }}</td>
+                    <td
+                        style="color: {{ 'var(--active-green)' if entry.proceed_rate == 100 else 'inherit' }}; font-weight: {{ 'bold' if entry.proceed_rate == 100 else 'normal' }};">
+                        {{ entry.proceed_rate }}%
+                    </td>
+                    <td>{{ entry.numb_minutes }}</td>
+                    <td>{{ entry.comment or '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No history found matching filters.</p>
+    {% endif %}
+</div>
+{% endblock %}

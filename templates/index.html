@@ -1,0 +1,674 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Futuristic Header Enhancements */
+
+    .big-table thead th {
+        position: relative;
+        /* Anchor for popovers */
+        padding-right: 30px;
+        /* Space for icons */
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        /* Full fill */
+    }
+
+    .header-actions {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin-left: 8px;
+        opacity: 0.3;
+        transition: opacity 0.2s;
+    }
+
+    .big-table thead th:hover .header-actions {
+        opacity: 1;
+    }
+
+    .action-icon {
+        cursor: pointer;
+        font-size: 0.65rem;
+        /* tiny arrows */
+        line-height: .8;
+        color: #555;
+        padding: 1px;
+    }
+
+    .action-icon:hover {
+        color: #000;
+        font-weight: bold;
+    }
+
+    .filter-trigger {
+        font-size: 0.75rem;
+        margin-top: 2px;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .filter-trigger:hover {
+        color: #007bff;
+    }
+
+    /* Futuristic Glassmorphism Popover */
+    .menu-popover {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 220px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        border-radius: 12px;
+        padding: 12px;
+        z-index: 1000;
+        display: none;
+        /* Hidden by default */
+        animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .menu-popover.show {
+        display: block;
+    }
+
+    .popover-header {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .popover-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .popover-btn {
+        background: none;
+        border: none;
+        text-align: left;
+        padding: 6px 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background 0.1s;
+        color: #444;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .popover-btn:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .popover-divider {
+        height: 1px;
+        background: #eee;
+        margin: 4px 0;
+    }
+
+    .popover-input {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    /* Active State for Filter Icon if column is filtered */
+    .filtered-col .filter-trigger {
+        color: #007bff;
+        opacity: 1;
+        font-weight: bold;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inprogress {
+        background: #fff3cd;
+        color: #856404;
+    }
+</style>
+<form action="{{ url_for('save_daily') }}" method="POST" id="dailyForm">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <h2 style="margin-bottom: 0.3rem;">{{ greeting }}, {{ current_user.username }}!</h2>
+            <p style="font-size: 0.9rem; color: #94a3b8; margin: 0;">
+                Today is {{ today.strftime('%d/%m/%Y') }}.
+                {% if unfinished_count > 0 %}
+                You have <strong style="color: #fbbf24;">{{ unfinished_count }}</strong> task{{ 's' if unfinished_count
+                > 1 else '' }} not accomplished.
+                {% else %}
+                You have no pending tasks.
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <button type="button" class="btn-secondary" onclick="addRow()">+ Add Row</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="button" class="btn-danger" onclick="confirmEndDay()">End Day (To History)</button>
+        </div>
+    </div>
+
+    <!-- Dynamic Popover Container (Moves around) -->
+    <div id="columnMenu" class="menu-popover">
+        <div class="popover-header">
+            <span id="menuTitle">Column Actions</span>
+            <span style="cursor:pointer; font-size:1.2rem;" onclick="closeMenu()">×</span>
+        </div>
+        <div class="popover-body">
+            <button type="button" class="popover-btn" onclick="applySort('asc')"><span>⬆️</span> Sort Ascending</button>
+            <button type="button" class="popover-btn" onclick="applySort('desc')"><span>⬇️</span> Sort
+                Descending</button>
+            <div class="popover-divider"></div>
+            <!-- Dynamic Content Injected Here -->
+            <div id="filterInputs"></div>
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <button type="button" class="btn-primary" style="padding:4px 10px; font-size:0.8rem; flex:1;"
+                    onclick="applyFilter()">Apply</button>
+                <button type="button" class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;"
+                    onclick="clearFilter()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="big-table" id="taskTable">
+            <thead>
+                <tr>
+                    <th style="width: 2%;"></th>
+                    <!-- Helper Macro or manual repetition for control structure -->
+                    <th style="width: 17%;" id="th_category_name">
+                        <div class="header-content">
+                            Category
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('category_name', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('category_name', 'desc')">▼</span>
+                                <span class="filter-trigger"
+                                    onclick="openMenu('category_name', 'select', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 20%;" id="th_task_name">
+                        <div class="header-content">
+                            Task
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('task_name', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('task_name', 'desc')">▼</span>
+                                <span class="filter-trigger" onclick="openMenu('task_name', 'text', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 6%;" id="th_impact_score">
+                        <div class="header-content">
+                            Impact
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('impact_score', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('impact_score', 'desc')">▼</span>
+                                <span class="filter-trigger"
+                                    onclick="openMenu('impact_score', 'number', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 6%;" id="th_risk_score">
+                        <div class="header-content">
+                            Risk
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('risk_score', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('risk_score', 'desc')">▼</span>
+                                <span class="filter-trigger" onclick="openMenu('risk_score', 'number', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 5%;" id="th_total_score">
+                        <div class="header-content">
+                            Weight
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('total_score', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('total_score', 'desc')">▼</span>
+                                <span class="filter-trigger" onclick="openMenu('total_score', 'number', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 8%;" id="th_planified_date">
+                        <div class="header-content">
+                            Plan
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('planified_date', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('planified_date', 'desc')">▼</span>
+                                <span class="filter-trigger"
+                                    onclick="openMenu('planified_date', 'date', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 8%;" id="th_finish_date">
+                        <div class="header-content">
+                            Finish
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('finish_date', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('finish_date', 'desc')">▼</span>
+                                <span class="filter-trigger" onclick="openMenu('finish_date', 'date', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 7%;" id="th_proceed_rate">
+                        <div class="header-content">
+                            Progress
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('proceed_rate', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('proceed_rate', 'desc')">▼</span>
+                                <span class="filter-trigger"
+                                    onclick="openMenu('proceed_rate', 'number', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 6%;" id="th_numb_minutes">
+                        <div class="header-content">
+                            Mins
+                            <div class="header-actions">
+                                <span class="action-icon" onclick="quickSort('numb_minutes', 'asc')">▲</span>
+                                <span class="action-icon" onclick="quickSort('numb_minutes', 'desc')">▼</span>
+                                <span class="filter-trigger"
+                                    onclick="openMenu('numb_minutes', 'number', event)">⚡</span>
+                            </div>
+                        </div>
+                    </th>
+                    <th style="width: 10%;">Comment</th>
+                    <th style="width: 5%;">Pin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in daily_entries %}
+                <tr>
+                    <td><span class="remove-row" onclick="removeRow(this)">×</span></td>
+                    <td>
+                        <select name="category_name" class="cat-select" onchange="updateTasks(this)" required>
+                            <option value="{{ entry.category_name }}" selected>{{ entry.category_name }}</option>
+                            {% for cat in categories %}
+                            {% if cat.name != entry.category_name %}
+                            <option value="{{ cat.name }}" data-id="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="task_name" required>
+                            <option value="{{ entry.task_name }}" selected>{{ entry.task_name }}</option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="impact_score" class="calc-input" min="0" max="10"
+                            value="{{ entry.impact_score }}" oninput="calcTotal(this)"></td>
+                    <td><input type="number" name="risk_score" class="calc-input" min="0" max="10"
+                            value="{{ entry.risk_score }}" oninput="calcTotal(this)"></td>
+                    <td><input type="number" name="total_score"
+                            class="total-output {{ 'score-crit' if entry.total_score >= 15 else 'score-high' if entry.total_score >= 10 else 'score-med' if entry.total_score >= 5 else 'score-low' }}"
+                            readonly value="{{ entry.total_score }}"></td>
+                    <td><input type="date" name="planified_date" value="{{ entry.planified_date }}"></td>
+                    <td><input type="date" name="finish_date" value="{{ entry.finish_date }}"></td>
+                    <td><input type="number" name="proceed_rate" min="0" max="100" value="{{ entry.proceed_rate }}"
+                            oninput="if(this.value > 100) this.value = 100;">
+                    </td>
+                    <td><input type="number" name="numb_minutes" min="0" value="{{ entry.numb_minutes }}"></td>
+                    <td><input type="text" name="comment" value="{{ entry.comment }}"></td>
+                    <td>
+                        <select name="pin_mode" style="font-size: 0.8rem; padding: 0.3rem;">
+                            <option value="none" {{ 'selected' if entry.pin_mode=='none' else '' }}>Off</option>
+                            <option value="recurring" {{ 'selected' if entry.pin_mode=='recurring' else '' }}>Reset
+                            </option>
+                            <option value="continue" {{ 'selected' if entry.pin_mode=='continue' else '' }}>Keep
+                            </option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<script>
+    // Master Data from Server
+    const categoriesParams = {{ categories_data | tojson }};
+
+    function confirmEndDay() {
+        if (confirm("Are you sure you want to end the day? This will move all tasks to History.")) {
+            // Submit the MAIN form to the end_day route to ensure data is saved
+            const form = document.getElementById('dailyForm');
+            form.action = "{{ url_for('end_day') }}";
+            form.submit();
+        }
+    }
+
+    function removeRow(btn) {
+        if (confirm("Delete this task? This will save changes.")) {
+            btn.closest('tr').remove();
+
+            // Auto-save to persist deletion
+            const form = document.getElementById('dailyForm');
+            // Ensure action is correct (save_daily, not end_day)
+            form.action = "{{ url_for('save_daily') }}";
+            form.submit();
+        }
+    }
+
+    function calcTotal(input) {
+        const row = input.closest('tr');
+        const imp = parseInt(row.querySelector('[name="impact_score"]').value) || 0;
+        const risk = parseInt(row.querySelector('[name="risk_score"]').value) || 0;
+        const total = imp + risk;
+        const totalInput = row.querySelector('[name="total_score"]');
+
+        totalInput.value = total;
+
+        // Apply Color Class based on score 0-20
+        totalInput.className = 'total-output'; // Reset
+        if (total >= 16) totalInput.classList.add('score-crit');
+        else if (total >= 11) totalInput.classList.add('score-high');
+        else if (total >= 6) totalInput.classList.add('score-med');
+        else totalInput.classList.add('score-low');
+    }
+
+    async function updateTasks(selectElement) {
+        const row = selectElement.closest('tr');
+        const taskSelect = row.querySelector('[name="task_name"]');
+        const catName = selectElement.value;
+        const catId = selectElement.options[selectElement.selectedIndex].getAttribute('data-id');
+
+        taskSelect.innerHTML = '<option value="">Loading...</option>';
+
+        if (!catId) return; // Custom value or placeholder
+
+        try {
+            const response = await fetch('/get_tasks/' + catId);
+            const tasks = await response.json();
+
+            taskSelect.innerHTML = '';
+            tasks.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.name;
+                opt.text = t.name;
+                taskSelect.appendChild(opt);
+            });
+        } catch (e) {
+            console.error(e);
+            taskSelect.innerHTML = '<option value="">Error</option>';
+        }
+    }
+
+    function addRow() {
+        const tbody = document.querySelector('#taskTable tbody');
+        const tr = document.createElement('tr');
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        let catOptions = '<option value="" disabled selected>Select</option>';
+        categoriesParams.forEach(c => {
+            catOptions += `<option value="${c.name}" data-id="${c.id}">${c.name}</option>`;
+        });
+
+        tr.innerHTML = `
+<td><span class="remove-row" onclick="removeRow(this)">×</span></td>
+<td>
+    <select name="category_name" class="cat-select" onchange="updateTasks(this)" required>
+        ${catOptions}
+    </select>
+</td>
+<td>
+    <select name="task_name" required>
+        <option value="" disabled>Select Category First</option>
+    </select>
+</td>
+<td><input type="number" name="impact_score" class="calc-input" min="0" max="10" value="0" oninput="calcTotal(this)">
+</td>
+<td><input type="number" name="risk_score" class="calc-input" min="0" max="10" value="0" oninput="calcTotal(this)"></td>
+<td><input type="number" name="total_score" class="total-output" readonly value="0"></td>
+<td><input type="date" name="planified_date" value="${todayStr}"></td>
+<td><input type="date" name="finish_date"></td>
+<td><input type="number" name="proceed_rate" min="0" max="100" value="0"
+        oninput="if(this.value > 100) this.value = 100;"></td>
+<td><input type="number" name="numb_minutes" min="0" value="0"></td>
+<td><input type="text" name="comment"></td>
+<td>
+    <select name="pin_mode" style="font-size: 0.8rem; padding: 0.3rem;">
+        <option value="none" selected>Off</option>
+        <option value="recurring">Reset</option>
+        <option value="continue">Keep</option>
+    </select>
+</td>
+`;
+        tbody.appendChild(tr);
+    }
+
+    // Add one row by default if empty
+    if (document.querySelectorAll('#taskTable tbody tr').length === 0) {
+        addRow();
+    }
+
+    // --- Futuristic Header Menu Logic ---
+
+    let currentMenuCol = null;
+    let currentMenuType = null;
+    const activeFilters = {}; // { colName: { type, value } }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('columnMenu');
+        const isClickInside = menu.contains(e.target);
+        const isTrigger = e.target.classList.contains('filter-trigger') || e.target.closest('.filter-trigger');
+        const isPopover = e.target.closest('.menu-popover');
+
+        if (!isClickInside && !isPopover && !isTrigger && menu.classList.contains('show')) {
+            closeMenu();
+        }
+    });
+
+    function closeMenu() {
+        document.getElementById('columnMenu').classList.remove('show');
+    }
+
+    function openMenu(colName, type, event) {
+        event.stopPropagation();
+        currentMenuCol = colName;
+        currentMenuType = type;
+
+        const menu = document.getElementById('columnMenu');
+        const inputsDiv = document.getElementById('filterInputs');
+        const title = document.getElementById('menuTitle');
+        const th = event.target.closest('th'); // Anchor
+
+        // 1. Position Popover relative to TH
+        const rect = th.getBoundingClientRect();
+        menu.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+        menu.style.left = (rect.left + window.scrollX) + 'px';
+
+        // 2. Set Content
+        title.innerText = th.innerText.trim().split('\n')[0] + " Actions"; // Get main text part
+
+        // Generate Input based on Type
+        let inputHTML = '';
+        const currentVal = activeFilters[colName] ? activeFilters[colName].value : '';
+
+        if (type === 'text') {
+            inputHTML = `<input type="text" class="popover-input" id="popVal" placeholder="Search..." value="${currentVal}">`;
+        } else if (type === 'number') {
+            inputHTML = `<input type="number" class="popover-input" id="popVal" placeholder="Min Value or exact"
+    value="${currentVal}">`;
+        } else if (type === 'date') {
+            inputHTML = `<input type="date" class="popover-input" id="popVal" value="${currentVal}">`;
+        } else if (type === 'select') {
+            // For Category, we can show a mini select or even checkboxes if we had list
+            // Re-using the categoriesParams from previous script block if available, else simple input
+            let opts = '<option value="">All</option>';
+            if (typeof categoriesParams !== 'undefined') {
+                categoriesParams.forEach(c => {
+                    const sel = (currentVal === c.name.toLowerCase()) ? 'selected' : '';
+                    opts += `<option value="${c.name}" ${sel}>${c.name}</option>`;
+                });
+            }
+            inputHTML = `<select class="popover-input" id="popVal">${opts}</select>`;
+        }
+
+        inputsDiv.innerHTML = `<label style="font-size:0.75rem; color:#666;">Filter By:</label>${inputHTML}`;
+
+        menu.classList.add('show');
+    }
+
+    function applyFilter() {
+        if (!currentMenuCol) return;
+
+        const valInput = document.getElementById('popVal');
+        const val = valInput.value;
+
+        if (val) {
+            activeFilters[currentMenuCol] = { type: currentMenuType, value: val.toLowerCase() };
+            // Visual feedback
+            const th = document.querySelector(`#th_${currentMenuCol}`);
+            if (th) {
+                const trigger = th.querySelector('.filter-trigger');
+                if (trigger) {
+                    trigger.style.color = '#007bff';
+                    trigger.style.opacity = '1';
+                }
+            }
+        } else {
+            delete activeFilters[currentMenuCol];
+            // Reset Visual
+            const th = document.querySelector(`#th_${currentMenuCol}`);
+            if (th) {
+                const trigger = th.querySelector('.filter-trigger');
+                if (trigger) {
+                    trigger.style.color = '';
+                    trigger.style.opacity = '';
+                }
+            }
+        }
+
+        filterRowsGlobal();
+        closeMenu();
+    }
+
+    function clearFilter() {
+        if (!currentMenuCol) return;
+        delete activeFilters[currentMenuCol];
+        const th = document.querySelector(`#th_${currentMenuCol}`);
+        if (th) {
+            const trigger = th.querySelector('.filter-trigger');
+            if (trigger) {
+                trigger.style.color = '';
+                trigger.style.opacity = '';
+            }
+        }
+        filterRowsGlobal();
+        closeMenu();
+    }
+
+    function filterRowsGlobal() {
+        const rows = document.querySelectorAll('#taskTable tbody tr');
+
+        rows.forEach(row => {
+            let show = true;
+
+            // Check ALL active filters
+            for (const [col, filter] of Object.entries(activeFilters)) {
+                // Get cell value
+                const input = row.querySelector(`[name="${col}"]`);
+                if (!input) continue;
+
+                let cellVal = input.value;
+                if (!cellVal) {
+                    // Try to get text from select options if standard value fail, or text content
+                    cellVal = input.options ? input.options[input.selectedIndex].text : "";
+                    if (!cellVal) cellVal = input.innerText || "";
+                }
+                cellVal = cellVal.toLowerCase();
+
+                const filterVal = filter.value;
+
+                // Logic based on types
+                if (filter.type === 'text' || filter.type === 'select') {
+                    if (!cellVal.includes(filterVal)) show = false;
+                } else if (filter.type === 'number') {
+                    if (parseFloat(cellVal) < parseFloat(filterVal)) show = false;
+                } else if (filter.type === 'date') {
+                    // Exact match for date
+                    if (cellVal !== filterVal) show = false;
+                }
+            }
+
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    // Quick Sort Direct from Header or Menu
+    function applySort(dir) {
+        if (currentMenuCol) quickSort(currentMenuCol, dir);
+        closeMenu();
+    }
+
+    function quickSort(columnName, dir) {
+        const tbody = document.querySelector('#taskTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            let valA = a.querySelector(`[name="${columnName}"]`).value;
+            let valB = b.querySelector(`[name="${columnName}"]`).value;
+
+            // Type handling
+            const isNum = ['impact_score', 'risk_score', 'total_score', 'proceed_rate', 'numb_minutes'].includes(columnName);
+
+            if (isNum) {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+            } else {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return dir === 'asc' ? -1 : 1;
+            if (valA > valB) return dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Re-append
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+{% endblock %}

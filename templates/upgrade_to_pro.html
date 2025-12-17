@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .pro-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .pro-card {
+        background: rgba(24, 24, 32, 0.95);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 16px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .pro-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .pro-subtitle {
+        text-align: center;
+        color: #94a3b8;
+        margin-bottom: 2rem;
+    }
+
+    .duration-options,
+    .payment-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .option-card {
+        background: rgba(35, 35, 43, 0.6);
+        border: 2px solid rgba(139, 92, 246, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .option-card:hover {
+        border-color: #8b5cf6;
+        background: rgba(35, 35, 43, 0.9);
+        transform: translateY(-2px);
+    }
+
+    .option-card input[type="radio"] {
+        display: none;
+    }
+
+    .option-card input[type="radio"]:checked+label {
+        color: #8b5cf6;
+    }
+
+    .option-card.selected {
+        border-color: #8b5cf6;
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .option-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .option-price {
+        font-size: 1.1rem;
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .payment-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-submit-pro {
+        width: 100%;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+        font-weight: 700;
+        padding: 1rem;
+        border-radius: 10px;
+        border: none;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        margin-top: 2rem;
+    }
+
+    .btn-submit-pro:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+    }
+
+    .payment-instructions {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .payment-instructions.active {
+        display: block;
+    }
+
+    .payment-instructions h4 {
+        color: #10b981;
+        margin-bottom: 1rem;
+    }
+
+    .payment-instructions p {
+        color: #cbd5e1;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="pro-container">
+    <div class="pro-card">
+        <h2 class="pro-title">Devenir PRO</h2>
+        <p class="pro-subtitle">Accédez à toutes les fonctionnalités premium</p>
+
+        {% if existing_request %}
+        <div class="alert alert-info">
+            <strong>Demande en cours</strong><br>
+            Statut: <strong>{{ existing_request.status }}</strong><br>
+            {% if existing_request.status == 'EN_ATTENTE_PAIEMENT' %}
+            Veuillez <a href="{{ url_for('upload_proof', request_id=existing_request.id) }}">téléverser votre
+                justificatif de paiement</a>.
+            {% elif existing_request.status == 'PAIEMENT_EN_VERIFICATION' %}
+            Votre justificatif est en cours de vérification par notre équipe.
+            {% endif %}
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('upgrade_to_pro') }}" id="proForm">
+            <h3 style="color: white; margin-bottom: 1rem;">Choisissez votre durée</h3>
+            <div class="duration-options">
+                <div class="option-card" onclick="selectDuration(1, this)">
+                    <input type="radio" name="duration" value="1" id="dur1" required>
+                    <label for="dur1">
+                        <div class="option-title">1 An</div>
+                        <div class="option-price">Meilleur prix</div>
+                    </label>
+                </div>
+                <div class="option-card" onclick="selectDuration(5, this)">
+                    <input type="radio" name="duration" value="5" id="dur5" required>
+                    <label for="dur5">
+                        <div class="option-title">5 Ans</div>
+                        <div class="option-price">Économisez plus</div>
+                    </label>
+                </div>
+            </div>
+
+            <h3 style="color: white; margin-bottom: 1rem; margin-top: 2rem;">Moyen de paiement</h3>
+            <div class="payment-options">
+                <div class="option-card" onclick="selectPayment('virement', this)">
+                    <input type="radio" name="payment_method" value="virement" id="pay1" required>
+                    <label for="pay1">
+                        <div class="payment-icon">🏦</div>
+                        <div class="option-title" style="font-size: 1.2rem;">Virement</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Bancaire DT</div>
+                    </label>
+                </div>
+                <div class="option-card" onclick="selectPayment('d17', this)">
+                    <input type="radio" name="payment_method" value="d17" id="pay2" required>
+                    <label for="pay2">
+                        <div class="payment-icon">💳</div>
+                        <div class="option-title" style="font-size: 1.2rem;">D17</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Paiement mobile</div>
+                    </label>
+                </div>
+            </div>
+            <div class="payment-options" style="grid-template-columns: 1fr;">
+                <div class="option-card" onclick="selectPayment('flouci', this)">
+                    <input type="radio" name="payment_method" value="flouci" id="pay3" required>
+                    <label for="pay3">
+                        <div class="payment-icon">📱</div>
+                        <div class="option-title" style="font-size: 1.2rem;">Flouci</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">Paiement mobile</div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="payment-instructions" id="virementInfo">
+                <h4>Instructions Virement Bancaire</h4>
+                <p><strong>RIB:</strong> XX XXX XXXXXXXXXXXXXXX XX<br>
+                    <strong>Titulaire:</strong> DailyTaskApp<br>
+                    <strong>Banque:</strong> [Nom de votre banque]
+                </p>
+            </div>
+
+            <div class="payment-instructions" id="d17Info">
+                <h4>Instructions D17</h4>
+                <p><strong>Numéro:</strong> XX XXX XXX<br>
+                    Envoyez le montant puis téléversez la capture d'écran.</p>
+            </div>
+
+            <div class="payment-instructions" id="flouciInfo">
+                <h4>Instructions Flouci</h4>
+                <p><strong>Numéro:</strong> XX XXX XXX<br>
+                    Envoyez le montant puis téléversez la capture d'écran.</p>
+            </div>
+
+            <button type="submit" class="btn-submit-pro">Créer ma demande PRO</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function selectDuration(value, element) {
+        document.querySelectorAll('.duration-options .option-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        document.getElementById('dur' + value).checked = true;
+    }
+
+    function selectPayment(value, element) {
+        document.querySelectorAll('.payment-options .option-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        element.classList.add('selected');
+
+        // Hide all instructions
+        document.querySelectorAll('.payment-instructions').forEach(inst => {
+            inst.classList.remove('active');
+        });
+
+        // Show selected
+        if (value === 'virement') {
+            document.getElementById('virementInfo').classList.add('active');
+        } else if (value === 'd17') {
+            document.getElementById('d17Info').classList.add('active');
+        } else if (value === 'flouci') {
+            document.getElementById('flouciInfo').classList.add('active');
+        }
+
+        // Check radio
+        document.getElementById('pay' + (value === 'virement' ? '1' : value === 'd17' ? '2' : '3')).checked = true;
+    }
+</script>
+{% endblock %}

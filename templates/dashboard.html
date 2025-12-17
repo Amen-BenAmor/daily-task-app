@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- TAILWIND CSS CDN (Scoped to this page if needed, or global) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        corePlugins: {
+            preflight: false
+        },
+        theme: {
+            extend: {
+                colors: {
+                    dark: '#0f0f15',
+                    panel: '#181820',
+                    glassBorder: 'rgba(255, 255, 255, 0.08)',
+                    textMain: '#f8fafc',
+                    textSec: '#94a3b8',
+                    primary: '#8b5cf6'
+                },
+                fontFamily: {
+                    sans: ['Outfit', 'sans-serif'],
+                }
+            }
+        }
+    }
+</script>
+
+<!-- WRAPPER: Dark Theme Background, Full Height -->
+<div class="min-h-screen bg-dark text-textMain font-sans selection:bg-primary selection:text-white pb-12">
+
+    <!-- MAIN CONTAINER: Centered, Constrained Width (Max 7xl ~ 1280px) -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+
+        <!-- 1. HEADER SECTION -->
+        <header
+            class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10 border-b border-glassBorder pb-6">
+            <div>
+                <h2 class="text-3xl font-bold tracking-tight text-white">Analytics Dashboard</h2>
+                <p class="text-textSec mt-1">Real-time performance metrics</p>
+            </div>
+
+            <!-- FILTER FORM -->
+            <form action="{{ url_for('dashboard') }}" method="GET"
+                class="flex flex-wrap items-end gap-6 bg-panel p-4 rounded-xl border border-glassBorder shadow-lg">
+
+                <!-- Date Range -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs uppercase tracking-wider text-textSec font-bold">Start Date</label>
+                        <input type="date" name="date_start" value="{{ request.args.get('date_start') or '' }}"
+                            class="bg-[#23232b] border border-[#333] text-sm rounded px-3 py-2 text-white focus:outline-none focus:border-primary transition-colors">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs uppercase tracking-wider text-textSec font-bold">End Date</label>
+                        <input type="date" name="date_end" value="{{ request.args.get('date_end') or '' }}"
+                            class="bg-[#23232b] border border-[#333] text-sm rounded px-3 py-2 text-white focus:outline-none focus:border-primary transition-colors">
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="hidden md:block w-px h-10 bg-glassBorder"></div>
+
+                <!-- Thresholds -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs uppercase tracking-wider text-textSec font-bold">Important (>)</label>
+                        <input type="number" name="importance_threshold"
+                            value="{{ request.args.get('importance_threshold') or thresholds.importance }}"
+                            class="w-20 bg-[#23232b] border border-[#333] text-sm rounded px-3 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors text-center">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs uppercase tracking-wider text-textSec font-bold">Time Waste (<) </label>
+                                <input type="number" name="waster_threshold"
+                                    value="{{ request.args.get('waster_threshold') or thresholds.waste }}"
+                                    class="w-20 bg-[#23232b] border border-[#333] text-sm rounded px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors text-center">
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="mb-0.5 bg-primary hover:bg-violet-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                    <span>Update</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                </button>
+            </form>
+        </header>
+
+        <!-- 2. KPI METRICS (Grid: 1 col mobile -> 2 col tablet -> 4 col desktop) -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Total Tasks -->
+            <div
+                class="bg-panel rounded-xl p-6 border border-glassBorder shadow-sm flex items-center gap-4 hover:border-textSec transition-colors">
+                <div class="p-3 bg-blue-500/10 rounded-lg text-blue-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white">{{ metrics.total }}</div>
+                    <div class="text-xs uppercase tracking-wider text-textSec font-semibold">Total Tasks</div>
+                </div>
+            </div>
+
+            <!-- Active Today -->
+            <div
+                class="bg-panel rounded-xl p-6 border border-glassBorder shadow-sm flex items-center gap-4 hover:border-textSec transition-colors">
+                <div class="p-3 bg-yellow-500/10 rounded-lg text-yellow-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white">{{ metrics.live_tasks }}</div>
+                    <div class="text-xs uppercase tracking-wider text-textSec font-semibold">Active Today</div>
+                </div>
+            </div>
+
+            <!-- Completion Rate -->
+            <div
+                class="bg-panel rounded-xl p-6 border border-glassBorder shadow-sm flex items-center gap-4 hover:border-textSec transition-colors">
+                <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white">{{ metrics.completion_rate }}%</div>
+                    <div class="text-xs uppercase tracking-wider text-textSec font-semibold">Completion</div>
+                </div>
+            </div>
+
+            <!-- Avg Score -->
+            <div
+                class="bg-panel rounded-xl p-6 border border-glassBorder shadow-sm flex items-center gap-4 hover:border-textSec transition-colors">
+                <div class="p-3 bg-cyan-500/10 rounded-lg text-cyan-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-white">{{ metrics.avg_score }}</div>
+                    <div class="text-xs uppercase tracking-wider text-textSec font-semibold">Avg Score</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CHARTS GRID (Strict 1 col Mobile -> 2 col Desktop) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 text-white">
+
+            <!-- ROW 1: Wide Chart (Spans 2 cols on desktop) -->
+            <div class="lg:col-span-2 bg-panel rounded-xl border border-glassBorder p-6 shadow-sm">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-white">Occupancy Trend</h3>
+                    <p class="text-sm text-textSec">Minutes tracked per day</p>
+                </div>
+                <div class="relative h-80 w-full"> <!-- h-80 = 320px -->
+                    <canvas id="occupancyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ROW 2: Bar & Gauge & Week Chart -->
+            <!-- High Value Tasks (Bar) -->
+            <div class="bg-panel rounded-xl border border-glassBorder p-6 shadow-sm">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-white">High Value Distribution</h3>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Productivity by Day (New) -->
+            <div class="bg-panel rounded-xl border border-glassBorder p-6 shadow-sm">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-white">Productivity by Day</h3>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="weekChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Efficiency Gauge -->
+            <div
+                class="bg-panel rounded-xl border border-glassBorder p-6 shadow-sm flex flex-col items-center justify-center">
+                <div class="mb-2 w-full text-left">
+                    <h3 class="text-lg font-bold text-white">Efficiency Audit</h3>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center gap-4">
+                    <div class="text-center">
+                        <span class="text-6xl font-extrabold text-white tracking-tighter">{{ metrics.waster_count
+                            }}</span>
+                        <div class="text-xs font-bold text-red-500 uppercase tracking-widest mt-1">Low Value Tasks</div>
+                    </div>
+
+                    <div class="w-full max-w-xs space-y-2 text-center">
+                        <div class="h-3 w-full bg-gray-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 rounded-full" style="width: {{ metrics.waster_pct }}%"></div>
+                        </div>
+                        <p class="text-sm text-textSec font-medium">{{ metrics.waster_pct }}% Wasted Time</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 3: Doughnuts -->
+            <!-- Category Breakdown -->
+            <div class="bg-panel rounded-xl border border-glassBorder p-6 shadow-sm">
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-white">Category Breakdown</h3>
+                </div>
+                <div class="relative h-72 w-full flex justify-center">
+                    <canvas id="repartitionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Task Analysis -->
+            <div class="bg-panel rounded-xl border border-glassBorder p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white">Task Analysis</h3>
+                    <select id="catSelector" onchange="updateTaskChart()"
+                        class="bg-[#23232b] border border-[#333] text-xs text-white rounded px-2 py-1 focus:outline-none focus:border-primary">
+                        <!-- JS Populats This -->
+                    </select>
+                </div>
+                <div class="relative h-72 w-full flex justify-center">
+                    <canvas id="taskChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ROW 4: Anomalies (Full Width) -->
+            <div class="lg:col-span-2 bg-panel rounded-xl border border-glassBorder p-6 shadow-sm overflow-hidden">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-red-500">Detected Anomalies</h3>
+                    <p class="text-sm text-textSec">Tasks with duration > 60m & score < 3</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                <th class="py-3 px-4 text-xs font-bold text-textSec uppercase tracking-wider">Date
+                                </th>
+                                <th class="py-3 px-4 text-xs font-bold text-textSec uppercase tracking-wider">Task
+                                </th>
+                                <th class="py-3 px-4 text-xs font-bold text-textSec uppercase tracking-wider">Category
+                                </th>
+                                <th class="py-3 px-4 text-xs font-bold text-textSec uppercase tracking-wider">Duration
+                                </th>
+                                <th class="py-3 px-4 text-xs font-bold text-textSec uppercase tracking-wider">Score
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm text-gray-300">
+                            {% for p in problems %}
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-4 whitespace-nowrap">{{ p.date.strftime('%Y-%m-%d') }}</td>
+                                <td class="py-3 px-4 font-medium">{{ p.task }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-block px-2 py-1 bg-white/10 rounded text-xs text-gray-300">{{
+                                        p.category }}</span>
+                                </td>
+                                <td class="py-3 px-4 whitespace-nowrap">{{ p.minutes }} min</td>
+                                <td class="py-3 px-4 font-bold text-red-500">{{ p.score }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-textSec italic">No anomalies found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script>
+    Chart.register(ChartDataLabels);
+    const chartData = {{ charts | tojson }};
+    const taskBreakdown = chartData.task_breakdown;
+
+    // TAILWIND COLORS (Dark Theme)
+    const colors = {
+        textMain: '#94a3b8', // Slate-400 for labels
+        blue500: '#8b5cf6', // Primary Violet
+        emerald400: '#2dd4bf', // Teal
+        purple500: '#f43f5e', // Rose/Accent
+        border: 'rgba(255,255,255,0.08)' // Glass border
+    };
+
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.defaults.color = colors.textMain;
+    Chart.defaults.borderColor = colors.border;
+    Chart.defaults.maintainAspectRatio = false;
+
+    // DataLabels Config for ALL charts by default (disabled, enable per chart)
+    Chart.defaults.plugins.datalabels.display = false;
+
+    // 1. Occupancy (Line)
+    new Chart(document.getElementById('occupancyChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Minutes',
+                data: chartData.occupancy,
+                borderColor: colors.blue500,
+                backgroundColor: (ctx) => {
+                    const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300);
+                    g.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                    g.addColorStop(1, 'rgba(59, 130, 246, 0)');
+                    return g;
+                },
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 3
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: colors.border } }
+            }
+        }
+    });
+
+    // 2. Importance (Bar)
+    new Chart(document.getElementById('importanceChart'), {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'High Value',
+                data: chartData.importance,
+                backgroundColor: colors.emerald400,
+                borderRadius: 4
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { display: false } } }
+    });
+
+    // 3. Week Day Chart (Bar)
+    new Chart(document.getElementById('weekChart'), {
+        type: 'bar',
+        data: {
+            labels: chartData.week_labels,
+            datasets: [{
+                label: 'Avg Score',
+                data: chartData.week_data,
+                backgroundColor: colors.purple500,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    display: true,
+                    color: '#64748b',
+                    anchor: 'end',
+                    align: 'top',
+                    font: { weight: 'bold' }
+                }
+            },
+            scales: { x: { grid: { display: false } }, y: { display: false, max: function (ctx) { return Math.max(...ctx.chart.data.datasets[0].data) * 1.2 } } }
+        }
+    });
+
+    // 4. Category (Doughnut)
+    const palette = ['#818cf8', '#f472b6', '#fbbf24', '#34d399', '#60a5fa', '#a855f7'];
+    new Chart(document.getElementById('repartitionChart'), {
+        type: 'doughnut',
+        data: {
+            labels: chartData.cat_labels,
+            datasets: [{ data: chartData.cat_data, backgroundColor: palette, borderWidth: 0, hoverOffset: 10 }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, color: '#64748b' } },
+                datalabels: {
+                    display: true,
+                    color: '#fff',
+                    font: { weight: 'bold', size: 10 },
+                    formatter: (value, ctx) => {
+                        let total = ctx.chart._metasets[ctx.datasetIndex].total;
+                        return Math.round((value / total) * 100) + '%';
+                    }
+                }
+            }
+        }
+    });
+
+    // 5. Task (Doughnut)
+    let taskChartInstance = null;
+    function updateTaskChart() {
+        const cat = document.getElementById('catSelector').value;
+        const data = taskBreakdown[cat] || {};
+        const ctx = document.getElementById('taskChart');
+        if (taskChartInstance) taskChartInstance.destroy();
+        taskChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{ data: Object.values(data), backgroundColor: palette, borderWidth: 0 }]
+            },
+            options: {
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: (value, ctx) => {
+                            let total = ctx.chart._metasets[ctx.datasetIndex].total;
+                            let pct = (value / total) * 100;
+                            return pct > 5 ? Math.round(pct) + '%' : ''; // Only show >5% to avoid clutter
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const sel = document.getElementById('catSelector');
+    const cats = Object.keys(taskBreakdown);
+    if (cats.length) {
+        sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        updateTaskChart();
+    } else {
+        sel.innerHTML = '<option>No Data</option>';
+    }
+</script>
+{% endblock %}

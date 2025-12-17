@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .signup-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 85vh;
+        padding: 2rem;
+    }
+
+    .signup-card {
+        background: rgba(24, 24, 32, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(45, 212, 191, 0.15);
+        border-radius: 20px;
+        padding: 3rem 3.5rem;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(45, 212, 191, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .signup-card::before {
+        content: '';
+        position: absolute;
+        top: -120px;
+        right: -120px;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(45, 212, 191, 0.25), transparent);
+        border-radius: 50%;
+        filter: blur(70px);
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    .signup-card::after {
+        content: '';
+        position: absolute;
+        bottom: -120px;
+        left: -120px;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent);
+        border-radius: 50%;
+        filter: blur(70px);
+        animation: pulse 4s ease-in-out infinite 2s;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 0.5;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .signup-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #10b981 0%, #2dd4bf 50%, #14b8a6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .signup-subtitle {
+        color: #94a3b8;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .trial-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(45, 212, 191, 0.15));
+        border: 1px solid rgba(45, 212, 191, 0.3);
+        color: #2dd4bf;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        letter-spacing: 0.05em;
+    }
+
+    .signup-form {
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-group {
+        margin-bottom: 1.75rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #10b981;
+        margin-bottom: 0.6rem;
+    }
+
+    .form-input {
+        width: 100%;
+        background: rgba(35, 35, 43, 0.8);
+        border: 1.5px solid rgba(45, 212, 191, 0.2);
+        color: white;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #2dd4bf;
+        background: rgba(35, 35, 43, 1);
+        box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .form-input::placeholder {
+        color: #64748b;
+    }
+
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 2px;
+        overflow: hidden;
+        display: none;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .strength-weak {
+        background: #ef4444;
+        width: 33%;
+    }
+
+    .strength-medium {
+        background: #f59e0b;
+        width: 66%;
+    }
+
+    .strength-strong {
+        background: #10b981;
+        width: 100%;
+    }
+
+    .btn-signup {
+        width: 100%;
+        background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+        color: white;
+        font-weight: 700;
+        padding: 1rem;
+        border-radius: 10px;
+        border: none;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        margin-top: 0.5rem;
+    }
+
+    .btn-signup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+        background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    }
+
+    .btn-signup:active {
+        transform: translateY(0);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.9rem;
+        color: #94a3b8;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-link a {
+        color: #a78bfa;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+        border-bottom: 1px solid transparent;
+    }
+
+    .login-link a:hover {
+        color: #c4b5fd;
+        border-bottom-color: #c4b5fd;
+    }
+
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 1;
+        border: 1px solid;
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .features-list li {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        padding: 0.4rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .features-list li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: #10b981;
+        font-weight: bold;
+    }
+</style>
+
+<div class="signup-container">
+    <div class="signup-card">
+        <div class="signup-header">
+            <h2 class="signup-title">Start Your Free Trial</h2>
+            <p class="signup-subtitle">Join professionals who trust DailyTaskApp</p>
+            <span class="trial-badge">14 DAYS FREE • NO CREDIT CARD</span>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category in ['danger', 'warning'] else 'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('signup') }}" class="signup-form" id="signupForm">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="username" required class="form-input" placeholder="John Doe"
+                    autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" name="email" required class="form-input" placeholder="you@company.com"
+                    autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" required class="form-input"
+                    placeholder="Create a strong password" id="password" autocomplete="new-password">
+                <div class="password-strength" id="passwordStrength">
+                    <div class="password-strength-bar" id="strengthBar"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-signup">Create Free Account</button>
+        </form>
+
+        <ul class="features-list">
+            <li>Full access to all features during trial</li>
+            <li>No credit card required</li>
+            <li>Cancel anytime</li>
+        </ul>
+
+        <div class="login-link">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    const strengthDiv = document.getElementById('passwordStrength');
+    const strengthBar = document.getElementById('strengthBar');
+
+    passwordInput.addEventListener('input', function () {
+        const password = this.value;
+
+        if (password.length === 0) {
+            strengthDiv.style.display = 'none';
+            return;
+        }
+
+        strengthDiv.style.display = 'block';
+
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/)) strength++;
+        if (password.match(/[^a-zA-Z0-9]/)) strength++;
+
+        strengthBar.className = 'password-strength-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('strength-weak');
+        } else if (strength === 3) {
+            strengthBar.classList.add('strength-medium');
+        } else {
+            strengthBar.classList.add('strength-strong');
+        }
+    });
+</script>
+{% endblock %}

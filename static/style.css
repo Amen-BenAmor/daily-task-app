@@ -1,0 +1,391 @@
+:root {
+    --bg-dark: #0f0f15;
+    /* Deeper, rich dark */
+    --panel-bg: #181820;
+    --glass-bg: rgba(30, 30, 40, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+
+    --primary: #8b5cf6;
+    /* Modern Violet */
+    --primary-glow: rgba(139, 92, 246, 0.4);
+    --secondary: #2dd4bf;
+    /* Teal */
+    --accent: #f43f5e;
+    /* Rose for accents */
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --active-green: #10b981;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    /* Clean modern font */
+    margin: 0;
+    padding: 0;
+    background-image:
+        radial-gradient(circle at 10% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 100%, rgba(45, 212, 191, 0.1) 0%, transparent 40%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-y: scroll;
+    /* FORCE SCROLLBAR to prevent layout shift */
+}
+
+/* History Table Specifics */
+.history-table th,
+.history-table td {
+    font-size: 0.75rem !important;
+    /* Smaller font per request */
+}
+
+.history-table th:nth-child(2),
+/* Category */
+.history-table td:nth-child(2) {
+    width: 20%;
+    /* Wider Category */
+}
+
+.history-table th:nth-child(3),
+/* Task */
+.history-table td:nth-child(3) {
+    width: 25%;
+    /* Wider Task */
+}
+
+/* Header & Nav */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    background: rgba(15, 15, 21, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+nav {
+    display: flex;
+    gap: 2rem;
+}
+
+nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    position: relative;
+}
+
+nav a:hover,
+nav a.active {
+    color: var(--primary);
+}
+
+nav a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+}
+
+/* Main Padding Reduced for Max Space */
+main {
+    padding: 1rem;
+    /* Reduced from 2rem 3rem to give table more space */
+}
+
+/* Glass Panels */
+.glass-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    margin-bottom: 2rem;
+}
+
+/* Big Table Styles */
+/* Big Table Styles */
+.table-container {
+    background: var(--panel-bg);
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    width: 100%;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: visible;
+    /* NO Scrollbar allowed */
+}
+
+.big-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* STRICT enforcement of widths */
+}
+
+/* ... existing table styles ... */
+
+/* Categories Page Redesign */
+.repository-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.repository-table th {
+    text-align: left;
+    padding: 1rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.repository-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.repository-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-cat {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--primary);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.btn-icon-large {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.4rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+    display: flex;
+    /* Fix vertical alignment */
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-large:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+/* Ensure Cursor works */
+.remove-row {
+    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.remove-row:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.big-table th {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    /* Reduced padding */
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    /* Reduced font size */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--glass-border);
+    white-space: nowrap;
+    /* Keep headers on one line if possible, or wrap if needed */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.big-table td {
+    padding: 0.4rem;
+    /* Reduced padding */
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+}
+
+.big-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Inputs & Form */
+input,
+select,
+button {
+    background: #23232b;
+    border: 1px solid #333;
+    color: var(--text-primary);
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #2a2a35;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.btn-primary:hover {
+    background: #7c3aed;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Utilities */
+.text-muted {
+    color: var(--text-secondary);
+}
+
+/* Score Colors */
+.score-high {
+    color: var(--active-green);
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.score-med {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.score-low {
+    color: var(--text-secondary);
+}
+
+.score-crit {
+    color: var(--danger);
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Remove Table Input Borders for Cleaner Look */
+.big-table input,
+.big-table select {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 0.2rem;
+    font-size: 0.75rem;
+    width: 100%;
+    /* Fill the cell */
+    min-width: 0;
+    /* CRITICAL: Allows input to shrink below default size to fit cell */
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+    /* Show ... if text is too long for input */
+}
+
+.big-table input:hover,
+.big-table select:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.big-table input:focus,
+.big-table select:focus {
+    background: #2a2a35;
+    border-color: var(--primary);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}

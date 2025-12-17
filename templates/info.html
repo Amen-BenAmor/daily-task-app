@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+        ℹ️ How to Use Daily Task App
+    </h2>
+
+    <div style="margin-bottom: 2rem;">
+        <h3 style="color: var(--primary); margin-bottom: 1rem;">1. Plan Your Day (Home)</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">
+            Start by adding rows for your daily tasks. Select a <b>Category</b> and a <b>Task</b> from the master lists.
+            Set an Impact and Risk score (0-10) to calculate priority.
+        </p>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h3 style="color: var(--secondary); margin-bottom: 1rem;">2. Manage Master Data</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">
+            Go to the <b>Categories</b> page to create new Categories (e.g., 'Work', 'Personal') and add standard Tasks
+            to them.
+            This keeps your data organized and consistent.
+        </p>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h3 style="color: var(--warning); margin-bottom: 1rem;">3. Track Progress</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">
+            As you work, update the <b>% Done</b> and <b>Minutes</b>.
+            At the end of the day, click <b>End Day</b>.
+        <ul>
+            <li>Tasks < 100% are automatically kept for tomorrow.</li>
+            <li>Use <b>Pin Mode</b> to force tasks to stay (Recurring resets progress, Continue keeps it).</li>
+        </ul>
+        </p>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h3 style="color: var(--active-green); margin-bottom: 1rem;">4. Analyze Information</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">
+            Check the <b>History</b> to see past archives.
+            Use the <b>Analysis</b> dashboard to see your performance metrics and completion rates over time.
+        </p>
+    </div>
+</div>
+{% endblock %}

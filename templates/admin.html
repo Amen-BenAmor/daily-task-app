@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .admin-container {
+        max-width: 1600px;
+        margin: 1.5rem auto;
+        padding: 1rem;
+    }
+
+    .admin-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .users-table {
+        background: rgba(24, 24, 32, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        overflow-x: auto;
+    }
+
+    .users-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.7rem;
+        /* Très petite police */
+    }
+
+    .users-table th {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+        padding: 0.5rem 0.4rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+    }
+
+    .users-table td {
+        padding: 0.4rem 0.4rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        color: #cbd5e1;
+        white-space: nowrap;
+    }
+
+    .users-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.15rem 0.4rem;
+        border-radius: 10px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .role-admin {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.4);
+    }
+
+    .role-pro {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .role-trial {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .status-active {
+        color: #10b981;
+        font-weight: 600;
+    }
+
+    .status-inactive {
+        color: #ef4444;
+        font-weight: 600;
+    }
+
+    .btn-action {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.65rem;
+        margin: 0.1rem;
+        white-space: nowrap;
+    }
+
+    .btn-block {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-block:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-activate {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-activate:hover {
+        background: rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-delete {
+        background: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-delete:hover {
+        background: rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-upgrade {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-upgrade:hover {
+        background: rgba(139, 92, 246, 0.3);
+    }
+
+    .stat-number {
+        font-weight: 700;
+        color: #2dd4bf;
+    }
+</style>
+
+<div class="admin-container">
+    <h2 class="admin-title">🔐 System Administration</h2>
+
+    <div class="users-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>PRO Exp.</th>
+                    <th>Categories</th>
+                    <th>Active Tasks</th>
+                    <th>History</th>
+                    <th>PRO Requests</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td><strong>#{{ u.id }}</strong></td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        <span class="role-badge role-{{ u.role }}">{{ u.role }}</span>
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                        <span class="status-active">✓ Active</span>
+                        {% else %}
+                        <span class="status-inactive">✗ Blocked</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.created_at.strftime('%d/%m/%y') }}</td>
+                    <td>
+                        {% if u.pro_expiration_date %}
+                        {{ u.pro_expiration_date.strftime('%d/%m/%y') }}
+                        {% else %}
+                        <span style="color: #64748b;">-</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="stat-number">{{ stats[u.id]['categories'] }}</span></td>
+                    <td><span class="stat-number">{{ stats[u.id]['tasks'] }}</span></td>
+                    <td><span class="stat-number">{{ stats[u.id]['history'] }}</span></td>
+                    <td><span class="stat-number">{{ stats[u.id]['pro_requests'] }}</span></td>
+                    <td>
+                        {% if u.role != 'admin' %}
+                        {% if u.is_active %}
+                        <form method="POST" action="{{ url_for('admin_block_user', user_id=u.id) }}"
+                            style="display: inline;">
+                            <button type="submit" class="btn-action btn-block"
+                                onclick="return confirm('Block this user?')">🚫 Block</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('admin_activate_user', user_id=u.id) }}"
+                            style="display: inline;">
+                            <button type="submit" class="btn-action btn-activate"
+                                onclick="return confirm('Activate this user?')">✓ Activate</button>
+                        </form>
+                        {% endif %}
+
+                        {% if u.role == 'trial' %}
+                        <form method="POST" action="{{ url_for('admin_upgrade_to_pro', user_id=u.id) }}"
+                            style="display: inline;">
+                            <button type="submit" class="btn-action btn-upgrade"
+                                onclick="return confirm('Upgrade to PRO (1 year)?')">⭐ PRO</button>
+                        </form>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                            style="display: inline;">
+                            <button type="submit" class="btn-action btn-delete"
+                                onclick="return confirm('DELETE user and ALL data? This cannot be undone!')">🗑️
+                                Delete</button>
+                        </form>
+                        {% else %}
+                        <span style="color: #64748b; font-size: 0.65rem;">Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

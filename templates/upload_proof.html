@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 2rem;
+    }
+
+    .upload-card {
+        background: rgba(24, 24, 32, 0.95);
+        border: 1px solid rgba(45, 212, 191, 0.2);
+        border-radius: 16px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .upload-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2dd4bf;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .upload-subtitle {
+        text-align: center;
+        color: #94a3b8;
+        margin-bottom: 2rem;
+    }
+
+    .file-upload-area {
+        border: 2px dashed rgba(45, 212, 191, 0.3);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: rgba(45, 212, 191, 0.05);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .file-upload-area:hover {
+        border-color: #2dd4bf;
+        background: rgba(45, 212, 191, 0.1);
+    }
+
+    .file-upload-area.dragover {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.15);
+    }
+
+    .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .btn-upload {
+        width: 100%;
+        background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+        color: white;
+        font-weight: 700;
+        padding: 1rem;
+        border-radius: 10px;
+        border: none;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+    }
+
+    .request-info {
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .request-info p {
+        color: #cbd5e1;
+        margin: 0.5rem 0;
+    }
+
+    .request-info strong {
+        color: #a78bfa;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 8px;
+        display: none;
+    }
+
+    .file-preview.active {
+        display: block;
+    }
+</style>
+
+<div class="upload-container">
+    <div class="upload-card">
+        <h2 class="upload-title">📤 Téléverser Justificatif</h2>
+        <p class="upload-subtitle">Envoyez votre preuve de paiement</p>
+
+        <div class="request-info">
+            <p><strong>Durée:</strong> {{ pro_request.duration_years }} an{{ 's' if pro_request.duration_years > 1 else
+                '' }}</p>
+            <p><strong>Moyen de paiement:</strong> {{ pro_request.payment_method|upper }}</p>
+            <p><strong>Statut:</strong> {{ pro_request.status }}</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📄</div>
+                <p style="color: white; font-weight: 600; margin-bottom: 0.5rem;">Cliquez pour sélectionner un fichier
+                </p>
+                <p style="color: #94a3b8; font-size: 0.9rem;">ou glissez-déposez ici</p>
+                <p style="color: #64748b; font-size: 0.85rem; margin-top: 1rem;">PNG, JPG ou PDF (max 16MB)</p>
+            </div>
+
+            <input type="file" name="proof_file" id="fileInput" class="file-input" accept=".png,.jpg,.jpeg,.pdf"
+                required>
+
+            <div class="file-preview" id="filePreview">
+                <p style="color: #10b981; margin: 0;"><strong>✓ Fichier sélectionné:</strong> <span
+                        id="fileName"></span></p>
+            </div>
+
+            <button type="submit" class="btn-upload">Envoyer le justificatif</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+
+    // File input change
+    fileInput.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            fileName.textContent = this.files[0].name;
+            filePreview.classList.add('active');
+        }
+    });
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            fileName.textContent = e.dataTransfer.files[0].name;
+            filePreview.classList.add('active');
+        }
+    });
+</script>
+{% endblock %}

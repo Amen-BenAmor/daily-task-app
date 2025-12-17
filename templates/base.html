@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Task App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <h1>DailyTask<span style="color: var(--primary);">App</span></h1>
+        </div>
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">Home</a>
+            <a href="{{ url_for('manage_categories') }}"
+                class="{{ 'active' if request.endpoint == 'manage_categories' else '' }}">Categories</a>
+            <a href="{{ url_for('history') }}"
+                class="{{ 'active' if request.endpoint == 'history' else '' }}">History</a>
+            <a href="{{ url_for('dashboard') }}"
+                class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Analysis</a>
+
+            {% if current_user.role == 'trial' %}
+            <a href="{{ url_for('upgrade_to_pro') }}"
+                style="color: #8b5cf6; padding: 0.5rem 1rem; border: 1px solid #8b5cf6; border-radius: 8px; font-weight: 400; text-decoration: none; transition: all 0.3s;">
+                Devenir PRO</a>
+            {% endif %}
+
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin_panel') }}" class="{{ 'active' if request.endpoint == 'admin_panel' else '' }}"
+                style="color: #a78bfa; font-weight: 700;">Admin</a>
+            <a href="{{ url_for('admin_pro_requests') }}"
+                class="{{ 'active' if request.endpoint == 'admin_pro_requests' else '' }}"
+                style="color: #10b981; font-weight: 700;">PRO Requests</a>
+            {% endif %}
+
+            <div style="height: 24px; width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span
+                    style="font-size: 0.75rem; font-weight: 700; color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(45, 212, 191, 0.1); text-transform: uppercase; letter-spacing: 0.05em;">
+                    {{ current_user.role }}
+                </span>
+                <a href="{{ url_for('logout') }}"
+                    style="color: #f87171; font-size: 0.875rem; font-weight: 600; text-decoration: none;">Logout</a>
+            </div>
+            {% else %}
+            <a href="{{ url_for('info') }}" class="{{ 'active' if request.endpoint == 'info' else '' }}">Info</a>
+            <a href="{{ url_for('contact') }}"
+                class="{{ 'active' if request.endpoint == 'contact' else '' }}">Contact</a>
+
+            <div style="height: 24px; width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+
+            <a href="{{ url_for('login') }}" style="color: white; text-decoration: none;">Login</a>
+            <a href="{{ url_for('signup') }}"
+                style="background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; font-weight: 700; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); text-decoration: none; transition: all 0.3s;">Sign
+                Up</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer
+        style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(24, 24, 32, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 0.5rem 2rem; font-size: 0.75rem; color: #94a3b8; text-align: center; z-index: 100; backdrop-filter: blur(10px);">
+        <a href="{{ url_for('contact') }}"
+            style="color: #2dd4bf; text-decoration: none; margin-right: 1rem;">Contact</a> |
+        <span style="margin: 0 0.5rem;">© 2025 Amen Allah Ben Amor. All rights reserved.</span>
+    </footer>
+
+</body>
+
+</html>
