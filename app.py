@@ -8,20 +8,27 @@ from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 import os
 
-from models import db, User, Task  # ou tous tes modèles
+
 
 
 
 
 app = Flask(__name__)
 # Using SQLite locally to mirror your MSSQL structure for rapid prototyping
-# Database Configuration - 'data' folder
-basedir = os.path.abspath(os.path.dirname(__file__))
-# Ensure data directory exists
-if not os.path.exists(os.path.join(basedir, 'data')):
-    os.makedirs(os.path.join(basedir, 'data'))
-    
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data', 'daily_task_app_v4_pro.db')
+# Database Configuration
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url:
+    # Fix for Render's postgres:// URI which SQLAlchemy removed support for
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Fallback to local SQLite
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    if not os.path.exists(os.path.join(basedir, 'data')):
+        os.makedirs(os.path.join(basedir, 'data'))
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data', 'daily_task_app_v4_pro.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.secret_key = 'Ameno123' # Added for session security
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key") #pour le prod
