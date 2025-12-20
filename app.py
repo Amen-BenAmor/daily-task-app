@@ -40,9 +40,14 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 # --- INITIALISATION DE LA BASE ---
-db.init_app(app)  # d'abord init
+db.init_app(app)
+
 with app.app_context():
-    db.create_all()  # ensuite créer toutes les tables
+    try:
+        db.create_all()
+        print("✅ DB OK - tables created or already exist")
+    except Exception as e:
+        print("❌ DB ERROR:", e)
 
 # --- routes etc. ---
 
